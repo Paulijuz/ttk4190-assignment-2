@@ -146,7 +146,11 @@ thr = rho * Dia^4 * KT * abs(n) * n;    % thrust command (N)
 % ship dynamics
 u = [ thr delta ]';
 tau = Bi * u;
-nu_dot = Minv * (tau - (CRB + CA + D) * nu - d); 
+
+% Denne linjen har blitt endret på fra den utdelte koden.
+% La til "+ Ca + D" og "- d".
+nu_dot = Minv * (tau - (CRB + CA + D) * nu - d);
+
 eta_dot = R * nu;    
 
 % Rudder saturation and dynamics (Sections 9.5.2)
