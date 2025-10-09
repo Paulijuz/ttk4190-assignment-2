@@ -58,13 +58,14 @@ Nrdot = -2.4283e10;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Add added mass here
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 MA = -[
     Xudot,  0,      0;
     0,      Yvdot,  Yrdot;
     0,      Nvdot,  Nrdot;
 ];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % rigid-body mass matrix
 MRB = [ m 0    0 
@@ -89,16 +90,52 @@ CRB = m * nu(3) * [ 0 -1 -xg
                 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Add Coriolis due to added mass here
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 CA = m2c(MA, nu);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Add linear damping here
+
+T1 = 20;
+T2 = 20;
+T6 = 10;
+
+D11 = (m - Xudot) / T1;
+D22 = (m - Yvdot) / T2;
+D33 = (Iz - Nrdot) / T6;
+
+D = diag([D11, D22, D33]);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Add nonlinear damping here
+
+Cd_2D = Hoerner(B,T);
+
+v = x(2);
+r = x(3);
+
+Ucf = 0;
+Ycf = 0;
+Ncf = 0;
+
+% Strip theory: cross−flow drag integrals
+dx = L/10; % 10 strips
+for xL = -L/2:dx:L/2
+Ucf = abs(v + xL * r) * (v + xL * r);
+Ycf = Ycf - 0.5 * rho * T * Cd_2D * Ucf * dx; % sway force
+Ncf = Ncf - 0.5 * rho * T * Cd_2D * xL * Ucf * dx; % yaw moment
+end
+
+d = [
+    0;
+    0;
+    0;
+];
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 R = Rzyx(0,0,eta(3));
@@ -109,7 +146,7 @@ thr = rho * Dia^4 * KT * abs(n) * n;    % thrust command (N)
 % ship dynamics
 u = [ thr delta ]';
 tau = Bi * u;
-nu_dot = Minv * (tau - (CRB + CA) * nu); 
+nu_dot = Minv * (tau - (CRB + CA + D) * nu - d); 
 eta_dot = R * nu;    
 
 % Rudder saturation and dynamics (Sections 9.5.2)
