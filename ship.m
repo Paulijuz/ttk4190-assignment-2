@@ -115,6 +115,7 @@ D = diag([D11, D22, D33]);
 
 Cd_2D = Hoerner(B,T);
 
+u = x(1);
 v = x(2);
 r = x(3);
 
@@ -125,15 +126,27 @@ Ncf = 0;
 % Strip theory: cross−flow drag integrals
 dx = L/10; % 10 strips
 for xL = -L/2:dx:L/2
-Ucf = abs(v + xL * r) * (v + xL * r);
-Ycf = Ycf - 0.5 * rho * T * Cd_2D * Ucf * dx; % sway force
-Ncf = Ncf - 0.5 * rho * T * Cd_2D * xL * Ucf * dx; % yaw moment
+    Ucf = abs(v + xL * r) * (v + xL * r);
+    Ycf = Ycf - 0.5 * rho * T * Cd_2D * Ucf * dx; % sway force
+    Ncf = Ncf - 0.5 * rho * T * Cd_2D * xL * Ucf * dx; % yaw moment
 end
 
-d = [
-    0;
-    0;
-    0;
+Rn = L/(10^-6)*abs(u);
+
+epsilon = 0.001;
+
+Cf = 0.075 / ((log10(Rn)-2)^2 + epsilon);
+
+S = 2*T*B + 2*T*L + L*B;
+
+k = 0.1;
+
+Xcf = - 0.5 * rho * S * (1 + k) * Cf * abs(u) * u;
+
+d = -[
+    Xcf;
+    Ycf;
+    Ncf;
 ];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
