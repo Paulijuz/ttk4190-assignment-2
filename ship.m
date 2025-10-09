@@ -131,7 +131,7 @@ for xL = -L/2:dx:L/2
     Ncf = Ncf - 0.5 * rho * T * Cd_2D * xL * Ucf * dx; % yaw moment
 end
 
-Rn = L/(10^-6)*abs(u);
+Rn = L/(1e-6)*abs(u);
 
 epsilon = 0.001;
 

@@ -1,9 +1,7 @@
-% Project in TTK4190 Guidance, Navigation and Control of Vehicles 
+% Project in TTK4190 Guidance, Navigation and Control of Vehicles
 %
 % Author:           My name
 % Study program:    My study program
-
-graphics_toolkit('qt');
 
 % Add folder for 3-D visualization files
 addpath(genpath('flypath3d_v2'))
@@ -34,25 +32,32 @@ nTimeSteps = length(t);         % Number of time steps
 simdata = zeros(nTimeSteps, 13); % Pre-allocate matrix for efficiency
 
 for i = 1:nTimeSteps
-      
+
     % reference models
     psi_d_deg = psi_ref;
     r_d_deg = 0;
     u_d = u_ref;
-        
+
     % control law
-    delta_c = 0.1;              % rudder angle command (rad)
-    n_c = 10;                   % propeller speed (rps)
-    
+    if i < nTimeSteps/2
+      % In the first half of the simulation the controls are this:
+      delta_c = 0;
+      n_c = 10;
+    else
+      % In the last half the controls are this:
+      delta_c = 0.1;              % rudder angle command (rad)
+      n_c = 10;                   % propeller speed (rps)
+    endif
+
     % ship dynamics
     u = [delta_c n_c]';
     xdot = ship(x,u);
-    
+
     % store simulation data in a table (for testing)
-    simdata(i,:) = [x(1:3)' x(4:6)' x(7) x(8) delta_c n_c u_d psi_d_deg r_d_deg];     
- 
+    simdata(i,:) = [x(1:3)' x(4:6)' x(7) x(8) delta_c n_c u_d psi_d_deg r_d_deg];
+
     % Euler integration (not recommended)
-    % x = euler2(xdot,x,h); 
+    % x = euler2(xdot,x,h);
     % Runge Kutta 4 integration
     x = rk4(@ship,h,x,u);
 
@@ -93,14 +98,14 @@ figure(3)
 figure(gcf)
 subplot(311)
 plot(y,x,'linewidth',2); axis('equal')
-title('North-East positions'); xlabel('(m)'); ylabel('(m)'); 
+title('North-East positions'); xlabel('(m)'); ylabel('(m)');
 subplot(312)
 plot(t,psi_deg,t,psi_d_deg,'linewidth',2);
-title('Actual and desired yaw angle'); xlabel('Time (s)');  ylabel('Angle (deg)'); 
+title('Actual and desired yaw angle'); xlabel('Time (s)');  ylabel('Angle (deg)');
 legend('actual yaw','desired yaw')
 subplot(313)
 plot(t,r_deg,t,r_d_deg,'linewidth',2);
-title('Actual and desired yaw rates'); xlabel('Time (s)');  ylabel('Angle rate (deg/s)'); 
+title('Actual and desired yaw rates'); xlabel('Time (s)');  ylabel('Angle rate (deg/s)');
 legend('actual yaw rate','desired yaw rate')
 
 figure(2)
@@ -117,8 +122,8 @@ subplot(313)
 plot(t,delta_deg,t,delta_c_deg,'linewidth',2);
 title('Actual and commanded rudder angle'); xlabel('Time (s)'); ylabel('Angle (deg)');
 legend('actual rudder angle','commanded rudder angle')
-%% Create objects for 3-D visualization 
-% Since we only simulate 3-DOF we need to construct zero arrays for the 
+%% Create objects for 3-D visualization
+% Since we only simulate 3-DOF we need to construct zero arrays for the
 % excluded dimensions, including height, roll and pitch
 z = zeros(length(x),1);
 phi = zeros(length(psi),1);
@@ -130,12 +135,12 @@ new_object('flypath3d_v2/ship1.mat',[x,y,z,phi,theta,psi],...
 'edge',[0 0 0],'face',[0 0 0],'alpha',1,...
 'path','on','pathcolor',[.89 .0 .27],'pathwidth',2);
 
-% Plot trajectories 
+% Plot trajectories
 flypath('flypath3d_v2/ship1.mat',...
 'animate','on','step',500,...
 'axis','on','axiscolor',[0 0 0],'color',[1 1 1],...
 'font','Georgia','fontsize',12,...
 'view',[10 30],'window',[900 900],...
-'xlim', [min(y)-0.1*max(abs(y)),max(y)+0.1*max(abs(y))],... 
+'xlim', [min(y)-0.1*max(abs(y)),max(y)+0.1*max(abs(y))],...
 'ylim', [min(x)-0.1*max(abs(x)),max(x)+0.1*max(abs(x))], ...
-'zlim', [-max(max(abs(x)),max(abs(y)))/100,max(max(abs(x)),max(abs(y)))/20]); 
+'zlim', [-max(max(abs(x)),max(abs(y)))/100,max(max(abs(x)),max(abs(y)))/20]);
